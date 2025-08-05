@@ -39,7 +39,7 @@ services:
     container_name: course-selection-backend
     restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "3001:5000"
     environment:
       NODE_ENV: ${NODE_ENV}
       MONGODB_URI: ${MONGODB_URI}
@@ -65,11 +65,16 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL}
+        REACT_APP_SOCKET_URL: ${REACT_APP_SOCKET_URL}
     container_name: course-selection-frontend
     restart: unless-stopped
     ports:
       - "3002:3000"
     environment:
+      REACT_APP_API_URL: ${REACT_APP_API_URL}
+      REACT_APP_SOCKET_URL: ${REACT_APP_SOCKET_URL}
       REACT_APP_API_BASE_URL: ${REACT_APP_API_BASE_URL}
     depends_on:
       - backend

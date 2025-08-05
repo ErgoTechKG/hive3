@@ -69,9 +69,9 @@ function App() {
           <ThemeProvider theme={theme}>
             <CssBaseline />
             <SnackbarProvider maxSnack={3} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
-              <AuthProvider>
-                <SocketProvider>
-                  <Router>
+              <Router>
+                <AuthProvider>
+                  <SocketProvider>
                     <Routes>
                       {/* Public routes */}
                       <Route path="/login" element={<Login />} />
@@ -112,9 +112,9 @@ function App() {
                       {/* 404 */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>
-                  </Router>
-                </SocketProvider>
-              </AuthProvider>
+                  </SocketProvider>
+                </AuthProvider>
+              </Router>
             </SnackbarProvider>
           </ThemeProvider>
           <ReactQueryDevtools initialIsOpen={false} />

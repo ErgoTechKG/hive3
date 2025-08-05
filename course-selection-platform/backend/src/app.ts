@@ -121,6 +121,24 @@ class App {
       });
     });
 
+    // Root endpoint
+    this.app.get('/', (_req: Request, res: Response) => {
+      res.status(200).json({
+        message: 'Course Selection Platform API',
+        version: '1.0.0',
+        status: 'Running',
+        endpoints: {
+          health: '/health',
+          auth: '/api/auth',
+          users: '/api/users',
+          courses: '/api/courses',
+          enrollments: '/api/enrollments',
+          tasks: '/api/tasks',
+          analytics: '/api/analytics'
+        }
+      });
+    });
+
     // API routes
     this.app.use('/api/auth', authRoutes);
     this.app.use('/api/users', userRoutes);

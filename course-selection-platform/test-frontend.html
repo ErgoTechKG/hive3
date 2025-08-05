@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Frontend Test</title>
+</head>
+<body>
+    <h1>Testing Frontend API Connection</h1>
+    <div id="status"></div>
+    <div id="api-test"></div>
+    <script>
+        // Test if backend is accessible
+        fetch('http://localhost:3001/health')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('status').innerHTML = '<h2>✅ Backend is accessible</h2><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            })
+            .catch(err => {
+                document.getElementById('status').innerHTML = '<h2>❌ Backend not accessible</h2><pre>' + err + '</pre>';
+            });
+
+        // Test API endpoint
+        fetch('http://localhost:3001/api/auth/test')
+            .then(res => res.text())
+            .then(data => {
+                document.getElementById('api-test').innerHTML = '<h2>API Response:</h2><pre>' + data + '</pre>';
+            })
+            .catch(err => {
+                document.getElementById('api-test').innerHTML = '<h2>API Error:</h2><pre>' + err + '</pre>';
+            });
+
+        // Show what the React app should be connecting to
+        document.write('<h3>Expected Configuration:</h3>');
+        document.write('<p>API URL: http://localhost:3001/api</p>');
+        document.write('<p>Socket URL: http://localhost:3001</p>');
+    </script>
+</body>
+</html>
