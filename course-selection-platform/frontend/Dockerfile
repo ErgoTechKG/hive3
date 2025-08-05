@@ -31,8 +31,15 @@ COPY --from=builder /app/build /usr/share/nginx/html
 # Create non-root user for nginx (nginx group already exists in the base image)
 RUN adduser -S nginxuser -u 1001 -G nginx
 
-# Change ownership of nginx directories
-RUN chown -R nginxuser:nginx /var/cache/nginx /var/run /var/log/nginx /usr/share/nginx/html
+# Create directories nginx needs with proper permissions
+RUN mkdir -p /var/cache/nginx/client_temp \
+             /var/cache/nginx/proxy_temp \
+             /var/cache/nginx/fastcgi_temp \
+             /var/cache/nginx/uwsgi_temp \
+             /var/cache/nginx/scgi_temp \
+             /tmp/nginx \
+    && chown -R nginxuser:nginx /var/cache/nginx /var/log/nginx /usr/share/nginx/html /tmp/nginx \
+    && chmod -R 755 /var/cache/nginx /var/log/nginx /tmp/nginx
 
 # Switch to non-root user
 USER nginxuser

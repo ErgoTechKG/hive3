@@ -68,7 +68,7 @@ services:
     container_name: course-selection-frontend
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3002:3000"
     environment:
       REACT_APP_API_BASE_URL: ${REACT_APP_API_BASE_URL}
     depends_on:

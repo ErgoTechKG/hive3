@@ -8,7 +8,11 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Install build tools for native dependencies
+RUN apk add --no-cache python3 make g++ && \
+    npm ci && \
+    npm cache clean --force && \
+    apk del python3 make g++
 
 # Copy source code
 COPY . .
@@ -30,7 +34,12 @@ RUN adduser -S nodeuser -u 1001
 COPY package*.json ./
 
 # Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Skip optional dependencies like sharp if they fail
+RUN apk add --no-cache python3 make g++ && \
+    npm ci --only=production --no-optional || \
+    npm ci --only=production --omit=optional && \
+    npm cache clean --force && \
+    apk del python3 make g++
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist

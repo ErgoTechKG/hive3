@@ -8,7 +8,7 @@ import morgan from 'morgan';
 import { createServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
 import mongoose from 'mongoose';
-import redis from 'redis';
+import { createClient } from 'redis';
 import config from './config';
 import logger from './utils/logger';
 import errorHandler from './middleware/errorHandler';
@@ -55,7 +55,7 @@ class App {
   }
 
   private connectRedis(): void {
-    this.redisClient = redis.createClient({
+    this.redisClient = createClient({
       url: config.redis.url
     });
 

@@ -6,7 +6,13 @@ import { AuthRequest } from '../middleware/auth';
 import logger from '../utils/logger';
 import { Parser } from 'json2csv';
 import xlsx from 'xlsx';
-import sharp from 'sharp';
+// Sharp is optional - fallback for ARM64 compatibility
+let sharp: any;
+try {
+  sharp = require('sharp');
+} catch (error) {
+  console.warn('Sharp module not available - image processing disabled');
+}
 import path from 'path';
 
 // Get all users with filters and pagination
@@ -200,14 +206,22 @@ export const uploadAvatar = async (
       return;
     }
 
-    // Process image with sharp
+    // Process image with sharp if available
     const filename = `avatar-${id}-${Date.now()}.jpg`;
     const filepath = path.join('uploads', 'avatars', filename);
 
-    await sharp(req.file.buffer)
-      .resize(200, 200, { fit: 'cover' })
-      .jpeg({ quality: 90 })
-      .toFile(filepath);
+    if (sharp) {
+      await sharp(req.file.buffer)
+        .resize(200, 200, { fit: 'cover' })
+        .jpeg({ quality: 90 })
+        .toFile(filepath);
+    } else {
+      // Fallback: save original image without processing
+      const fs = await import('fs/promises');
+      const dir = path.dirname(filepath);
+      await fs.mkdir(dir, { recursive: true });
+      await fs.writeFile(filepath, req.file.buffer);
+    }
 
     // Update user avatar
     const user = await User.findByIdAndUpdate(
