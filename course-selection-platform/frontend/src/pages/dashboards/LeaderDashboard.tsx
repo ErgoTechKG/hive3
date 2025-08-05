@@ -13,7 +13,6 @@ import {
   LinearProgress,
   Alert,
   Paper,
-  Divider,
   Tab,
   Tabs,
   Table,
@@ -26,28 +25,17 @@ import {
   IconButton,
   Menu,
   MenuItem,
-  Avatar,
-  AvatarGroup,
 } from '@mui/material';
 import {
-  School,
   Assignment,
   TrendingUp,
-  People,
   Assessment,
   Description,
-  Warning,
-  CheckCircle,
-  Schedule,
   MoreVert,
   Download,
   CloudDownload,
   Analytics,
-  Insights,
   Flag,
-  Timeline,
-  PieChart as PieChartIcon,
-  BarChart as BarChartIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'react-query';
@@ -117,10 +105,10 @@ const LeaderDashboard: React.FC = () => {
     return <LinearProgress />;
   }
 
-  const stats = dashboardData?.stats || {};
-  const kpis = dashboardData?.kpis || {};
-  const trends = dashboardData?.trends || {};
-  const alerts = dashboardData?.alerts || [];
+  const stats = dashboardData?.data || {};
+  const kpis = dashboardData?.data || {};
+  const trends = dashboardData?.data || {};
+  const alerts = dashboardData?.data || [];
 
   // Department performance data for radar chart
   const departmentPerformanceData = departmentComparison?.data?.map((dept: any) => ({
@@ -134,13 +122,13 @@ const LeaderDashboard: React.FC = () => {
 
   // Course distribution by credits
   const creditDistributionData = [
-    { name: '1-2学分', value: stats.lowCreditCourses || 0 },
-    { name: '3-4学分', value: stats.midCreditCourses || 0 },
-    { name: '5-6学分', value: stats.highCreditCourses || 0 },
+    { name: '1-2学分', value: (stats as any)?.lowCreditCourses || 0 },
+    { name: '3-4学分', value: (stats as any)?.midCreditCourses || 0 },
+    { name: '5-6学分', value: (stats as any)?.highCreditCourses || 0 },
   ];
 
   // Monthly trend data
-  const monthlyTrendData = trends.monthly?.map((item: any) => ({
+  const monthlyTrendData = (trends as any)?.monthly?.map((item: any) => ({
     month: format(new Date(item.date), 'MMM', { locale: zhCN }),
     courses: item.courses,
     students: item.students,
@@ -162,9 +150,9 @@ const LeaderDashboard: React.FC = () => {
       </Box>
 
       {/* System Alerts */}
-      {alerts.length > 0 && (
+      {(alerts as any)?.length > 0 && (
         <Box mb={3}>
-          {alerts.map((alert: any, index: number) => (
+          {(alerts as any)?.map((alert: any, index: number) => (
             <Alert 
               key={index} 
               severity={alert.severity} 
@@ -188,34 +176,34 @@ const LeaderDashboard: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="系统健康度"
-            value={`${kpis.systemHealth || 0}%`}
+            value={`${(kpis as any)?.systemHealth || 0}%`}
             icon={<Assessment />}
             color="primary"
-            trend={kpis.systemHealthTrend}
+            trend={(kpis as any)?.systemHealthTrend}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="教学质量指数"
-            value={kpis.qualityIndex || 0}
+            value={(kpis as any)?.qualityIndex || 0}
             icon={<TrendingUp />}
             color="success"
-            trend={kpis.qualityTrend}
+            trend={(kpis as any)?.qualityTrend}
             suffix="/100"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="资源利用率"
-            value={`${kpis.resourceUtilization || 0}%`}
-            icon={<PieChartIcon />}
+            value={`${(kpis as any)?.resourceUtilization || 0}%`}
+            icon={<Flag />}
             color="warning"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="满意度评分"
-            value={kpis.satisfactionScore || 0}
+            value={(kpis as any)?.satisfactionScore || 0}
             icon={<Flag />}
             color="info"
             suffix="/5.0"
@@ -247,19 +235,19 @@ const LeaderDashboard: React.FC = () => {
                 <Grid container spacing={2} mb={3}>
                   <Grid item xs={4}>
                     <Paper sx={{ p: 2, textAlign: 'center', backgroundColor: 'primary.light', color: 'white' }}>
-                      <Typography variant="h4">{stats.totalCourses || 0}</Typography>
+                      <Typography variant="h4">{(stats as any)?.totalCourses || 0}</Typography>
                       <Typography variant="body2">总课程数</Typography>
                     </Paper>
                   </Grid>
                   <Grid item xs={4}>
                     <Paper sx={{ p: 2, textAlign: 'center', backgroundColor: 'success.light', color: 'white' }}>
-                      <Typography variant="h4">{stats.totalStudents || 0}</Typography>
+                      <Typography variant="h4">{(stats as any)?.totalStudents || 0}</Typography>
                       <Typography variant="body2">总学生数</Typography>
                     </Paper>
                   </Grid>
                   <Grid item xs={4}>
                     <Paper sx={{ p: 2, textAlign: 'center', backgroundColor: 'warning.light', color: 'white' }}>
-                      <Typography variant="h4">{stats.totalProfessors || 0}</Typography>
+                      <Typography variant="h4">{(stats as any)?.totalProfessors || 0}</Typography>
                       <Typography variant="body2">教授总数</Typography>
                     </Paper>
                   </Grid>
@@ -382,22 +370,22 @@ const LeaderDashboard: React.FC = () => {
                 <List dense>
                   <ListItem>
                     <ListItemText primary="平均课程容量" />
-                    <Typography variant="h6">{stats.avgCourseCapacity || 0}</Typography>
+                    <Typography variant="h6">{(stats as any)?.avgCourseCapacity || 0}</Typography>
                   </ListItem>
                   <ListItem>
                     <ListItemText primary="师生比" />
-                    <Typography variant="h6">1:{stats.studentTeacherRatio || 0}</Typography>
+                    <Typography variant="h6">1:{(stats as any)?.studentTeacherRatio || 0}</Typography>
                   </ListItem>
                   <ListItem>
                     <ListItemText primary="课程完成率" />
                     <Typography variant="h6" color="success.main">
-                      {stats.courseCompletionRate || 0}%
+                      {(stats as any)?.courseCompletionRate || 0}%
                     </Typography>
                   </ListItem>
                   <ListItem>
                     <ListItemText primary="创新课程占比" />
                     <Typography variant="h6" color="primary">
-                      {stats.innovativeCourseRatio || 0}%
+                      {(stats as any)?.innovativeCourseRatio || 0}%
                     </Typography>
                   </ListItem>
                 </List>

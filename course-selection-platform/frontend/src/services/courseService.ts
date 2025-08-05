@@ -1,4 +1,5 @@
 import axios from '../utils/axios';
+import { ApiResponse, PaginatedResponse, Course, CourseStatistics } from '../types';
 
 interface CourseFilters {
   status?: string;
@@ -27,82 +28,101 @@ interface CourseData {
   }>;
   prerequisites?: string[];
   tags?: string[];
-  materials?: any[];
-  assessments?: any[];
+  materials?: CourseMaterial[];
+  assessments?: CourseAssessment[];
+}
+
+interface CourseMaterial {
+  _id: string;
+  title: string;
+  type: 'document' | 'video' | 'link' | 'assignment';
+  url?: string;
+  description?: string;
+  isRequired: boolean;
+  uploadedAt: string;
+}
+
+interface CourseAssessment {
+  _id: string;
+  title: string;
+  type: 'quiz' | 'exam' | 'assignment' | 'project';
+  weight: number;
+  dueDate?: string;
+  description?: string;
 }
 
 const courseService = {
-  getCourses: async (filters?: CourseFilters) => {
-    const response = await axios.get('/courses', { params: filters });
+  getCourses: async (filters?: CourseFilters): Promise<PaginatedResponse<Course>> => {
+    const response = await axios.get<PaginatedResponse<Course>>('/courses', { params: filters });
     return response.data;
   },
 
-  getCourseById: async (id: string) => {
-    const response = await axios.get(`/courses/${id}`);
+  getCourseById: async (id: string): Promise<ApiResponse<{ course: Course }>> => {
+    const response = await axios.get<ApiResponse<{ course: Course }>>(`/courses/${id}`);
     return response.data;
   },
 
-  createCourse: async (data: CourseData) => {
-    const response = await axios.post('/courses', data);
+  createCourse: async (data: CourseData): Promise<ApiResponse<{ course: Course }>> => {
+    const response = await axios.post<ApiResponse<{ course: Course }>>('/courses', data);
     return response.data;
   },
 
-  updateCourse: async (id: string, data: Partial<CourseData>) => {
-    const response = await axios.put(`/courses/${id}`, data);
+  updateCourse: async (id: string, data: Partial<CourseData>): Promise<ApiResponse<{ course: Course }>> => {
+    const response = await axios.put<ApiResponse<{ course: Course }>>(`/courses/${id}`, data);
     return response.data;
   },
 
-  deleteCourse: async (id: string) => {
-    const response = await axios.delete(`/courses/${id}`);
+  deleteCourse: async (id: string): Promise<ApiResponse<void>> => {
+    const response = await axios.delete<ApiResponse<void>>(`/courses/${id}`);
     return response.data;
   },
 
-  submitForApproval: async (id: string) => {
-    const response = await axios.post(`/courses/${id}/submit`);
+  submitForApproval: async (id: string): Promise<ApiResponse<{ course: Course }>> => {
+    const response = await axios.post<ApiResponse<{ course: Course }>>(`/courses/${id}/submit`);
     return response.data;
   },
 
-  approveCourse: async (id: string, approved: boolean, comment?: string) => {
-    const response = await axios.post(`/courses/${id}/approve`, { approved, comment });
+  approveCourse: async (id: string, approved: boolean, comment?: string): Promise<ApiResponse<{ course: Course }>> => {
+    const response = await axios.post<ApiResponse<{ course: Course }>>(`/courses/${id}/approve`, { approved, comment });
     return response.data;
   },
 
-  publishCourse: async (id: string) => {
-    const response = await axios.post(`/courses/${id}/publish`);
+  publishCourse: async (id: string): Promise<ApiResponse<{ course: Course }>> => {
+    const response = await axios.post<ApiResponse<{ course: Course }>>(`/courses/${id}/publish`);
     return response.data;
   },
 
-  archiveCourse: async (id: string) => {
-    const response = await axios.post(`/courses/${id}/archive`);
+  archiveCourse: async (id: string): Promise<ApiResponse<{ course: Course }>> => {
+    const response = await axios.post<ApiResponse<{ course: Course }>>(`/courses/${id}/archive`);
     return response.data;
   },
 
-  getCourseStatistics: async (id: string) => {
-    const response = await axios.get(`/courses/${id}/statistics`);
+  getCourseStatistics: async (id: string): Promise<ApiResponse<CourseStatistics>> => {
+    const response = await axios.get<ApiResponse<CourseStatistics>>(`/courses/${id}/statistics`);
     return response.data;
   },
 
-  getCoursesByProfessor: async (professorId: string, semester?: string) => {
-    const response = await axios.get(`/courses/professor/${professorId}`, {
+  getCoursesByProfessor: async (professorId: string, semester?: string): Promise<PaginatedResponse<Course>> => {
+    const response = await axios.get<PaginatedResponse<Course>>(`/courses/professor/${professorId}`, {
       params: { semester },
     });
     return response.data;
   },
 
-  batchPublishCourses: async (courseIds: string[]) => {
-    const response = await axios.post('/courses/batch/publish', { courseIds });
+  batchPublishCourses: async (courseIds: string[]): Promise<ApiResponse<{ published: string[]; failed: string[] }>> => {
+    const response = await axios.post<ApiResponse<{ published: string[]; failed: string[] }>>('/courses/batch/publish', { courseIds });
     return response.data;
   },
 
-  getMyCourses: async () => {
-    const response = await axios.get('/courses', {
+  getMyCourses: async (): Promise<PaginatedResponse<Course>> => {
+    const response = await axios.get<PaginatedResponse<Course>>('/courses', {
       params: { professor: 'me' },
     });
     return response.data;
   },
 
-  getPendingApprovals: async () => {
-    const response = await axios.get('/courses', {
+  getPendingApprovals: async (): Promise<PaginatedResponse<Course>> => {
+    const response = await axios.get<PaginatedResponse<Course>>('/courses', {
       params: { status: 'pending_approval' },
     });
     return response.data;

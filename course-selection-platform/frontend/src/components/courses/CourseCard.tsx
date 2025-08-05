@@ -7,7 +7,6 @@ import {
   Box,
   Chip,
   Button,
-  Avatar,
   LinearProgress,
 } from '@mui/material';
 import {
@@ -18,8 +17,10 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
+import { Course } from '../../types';
+
 interface CourseCardProps {
-  course: any;
+  course: Course;
   compact?: boolean;
   showActions?: boolean;
   onEnroll?: () => void;
@@ -60,7 +61,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
                 {course.nameCn}
               </Typography>
               <Typography variant="body2" color="textSecondary">
-                {course.courseId} | {course.professor?.nameCn}
+                {course.courseId} | {typeof course.professor === 'object' ? course.professor.nameCn : '未分配'}
               </Typography>
               <Box display="flex" gap={1} mt={1}>
                 <Chip label={`${course.credits} 学分`} size="small" />
@@ -107,7 +108,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
           <Box display="flex" alignItems="center" gap={1}>
             <Person fontSize="small" color="action" />
             <Typography variant="body2">
-              教授：{course.professor?.nameCn || '未分配'}
+              教授：{typeof course.professor === 'object' ? course.professor.nameCn : '未分配'}
             </Typography>
           </Box>
 
@@ -118,7 +119,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
             </Typography>
           </Box>
 
-          {course.schedule && course.schedule.length > 0 && (
+          {course.schedule && course.schedule.length > 0 && course.schedule[0] && (
             <Box display="flex" alignItems="center" gap={1}>
               <Schedule fontSize="small" color="action" />
               <Typography variant="body2">

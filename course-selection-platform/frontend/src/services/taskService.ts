@@ -1,4 +1,5 @@
 import axios from '../utils/axios';
+import { ApiResponse, PaginatedResponse, Task, TaskStatistics } from '../types';
 
 interface TaskFilters {
   type?: 'read' | 'action' | 'approval';
@@ -17,33 +18,45 @@ interface CreateTaskData {
   deadline?: string;
   priority?: 'low' | 'medium' | 'high' | 'urgent';
   relatedCourse?: string;
-  metadata?: any;
+  metadata?: Record<string, any>;
 }
 
-interface TaskResponse {
+interface TaskResponseData {
   status: 'read' | 'completed' | 'rejected';
   message?: string;
 }
 
+interface TaskTemplate {
+  _id: string;
+  name: string;
+  title: string;
+  description: string;
+  type: 'read' | 'action' | 'approval';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  category: string;
+  createdBy: string;
+  isActive: boolean;
+}
+
 const taskService = {
-  getTasks: async (filters?: TaskFilters) => {
-    const response = await axios.get('/tasks', { params: filters });
+  getTasks: async (filters?: TaskFilters): Promise<PaginatedResponse<Task>> => {
+    const response = await axios.get<PaginatedResponse<Task>>('/tasks', { params: filters });
     return response.data;
   },
 
-  getTaskById: async (id: string) => {
-    const response = await axios.get(`/tasks/${id}`);
+  getTaskById: async (id: string): Promise<ApiResponse<{ task: Task }>> => {
+    const response = await axios.get<ApiResponse<{ task: Task }>>(`/tasks/${id}`);
     return response.data;
   },
 
-  createTask: async (data: CreateTaskData, attachments?: File[]) => {
+  createTask: async (data: CreateTaskData, attachments?: File[]): Promise<ApiResponse<{ task: Task }>> => {
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined) {
         if (key === 'receivers' && Array.isArray(value)) {
           value.forEach(receiver => formData.append('receivers[]', receiver));
         } else {
-          formData.append(key, typeof value === 'object' ? JSON.stringify(value) : value);
+          formData.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
         }
       }
     });
@@ -52,66 +65,66 @@ const taskService = {
       attachments.forEach(file => formData.append('attachments', file));
     }
 
-    const response = await axios.post('/tasks', formData, {
+    const response = await axios.post<ApiResponse<{ task: Task }>>('/tasks', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
   },
 
-  updateTaskResponse: async (id: string, response: TaskResponse, attachments?: File[]) => {
+  updateTaskResponse: async (id: string, responseData: TaskResponseData, attachments?: File[]): Promise<ApiResponse<{ task: Task }>> => {
     const formData = new FormData();
-    formData.append('status', response.status);
-    if (response.message) {
-      formData.append('message', response.message);
+    formData.append('status', responseData.status);
+    if (responseData.message) {
+      formData.append('message', responseData.message);
     }
 
     if (attachments) {
       attachments.forEach(file => formData.append('attachments', file));
     }
 
-    const result = await axios.put(`/tasks/${id}/response`, formData, {
+    const response = await axios.put<ApiResponse<{ task: Task }>>(`/tasks/${id}/response`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
-    return result.data;
-  },
-
-  markAsRead: async (id: string) => {
-    const response = await axios.post(`/tasks/${id}/read`);
     return response.data;
   },
 
-  sendReminder: async (id: string, level?: 'gentle' | 'normal' | 'urgent') => {
-    const response = await axios.post(`/tasks/${id}/remind`, { level });
+  markAsRead: async (id: string): Promise<ApiResponse<{ task: Task }>> => {
+    const response = await axios.post<ApiResponse<{ task: Task }>>(`/tasks/${id}/read`);
     return response.data;
   },
 
-  getTaskStatistics: async () => {
-    const response = await axios.get('/tasks/statistics/overview');
+  sendReminder: async (id: string, level?: 'gentle' | 'normal' | 'urgent'): Promise<ApiResponse<void>> => {
+    const response = await axios.post<ApiResponse<void>>(`/tasks/${id}/remind`, { level });
     return response.data;
   },
 
-  getOverdueTasks: async () => {
-    const response = await axios.get('/tasks/overdue/list');
+  getTaskStatistics: async (): Promise<ApiResponse<TaskStatistics>> => {
+    const response = await axios.get<ApiResponse<TaskStatistics>>('/tasks/statistics/overview');
     return response.data;
   },
 
-  batchCreateTasks: async (tasks: CreateTaskData[]) => {
-    const response = await axios.post('/tasks/batch/create', { tasks });
+  getOverdueTasks: async (): Promise<PaginatedResponse<Task>> => {
+    const response = await axios.get<PaginatedResponse<Task>>('/tasks/overdue/list');
     return response.data;
   },
 
-  getTaskTemplates: async () => {
-    const response = await axios.get('/tasks/templates/list');
+  batchCreateTasks: async (tasks: CreateTaskData[]): Promise<ApiResponse<{ created: string[]; failed: string[] }>> => {
+    const response = await axios.post<ApiResponse<{ created: string[]; failed: string[] }>>('/tasks/batch/create', { tasks });
     return response.data;
   },
 
-  archiveCompletedTasks: async (beforeDate: string) => {
-    const response = await axios.post('/tasks/archive/completed', { beforeDate });
+  getTaskTemplates: async (): Promise<ApiResponse<{ templates: TaskTemplate[] }>> => {
+    const response = await axios.get<ApiResponse<{ templates: TaskTemplate[] }>>('/tasks/templates/list');
     return response.data;
   },
 
-  getMyTasks: async (filters?: { status?: string }) => {
-    const response = await axios.get('/tasks', {
+  archiveCompletedTasks: async (beforeDate: string): Promise<ApiResponse<{ archived: number }>> => {
+    const response = await axios.post<ApiResponse<{ archived: number }>>('/tasks/archive/completed', { beforeDate });
+    return response.data;
+  },
+
+  getMyTasks: async (filters?: { status?: string }): Promise<PaginatedResponse<Task>> => {
+    const response = await axios.get<PaginatedResponse<Task>>('/tasks', {
       params: { ...filters, role: 'receiver' },
     });
     return response.data;

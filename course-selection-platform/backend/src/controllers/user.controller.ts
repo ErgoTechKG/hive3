@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import User from '../models/User';
 import Enrollment from '../models/Enrollment';
 import Task from '../models/Task';
@@ -8,7 +8,6 @@ import { Parser } from 'json2csv';
 import xlsx from 'xlsx';
 import sharp from 'sharp';
 import path from 'path';
-import fs from 'fs/promises';
 
 // Get all users with filters and pagination
 export const getUsers = async (
@@ -91,7 +90,7 @@ export const getUserById = async (
     const canViewDetails = 
       req.user?.role === 'secretary' ||
       req.user?.role === 'leader' ||
-      req.user?._id.toString() === id;
+      (req.user?._id as any).toString() === id;
 
     if (!canViewDetails) {
       // Return limited info for other users
@@ -134,7 +133,7 @@ export const updateUser = async (
     const canEdit = 
       req.user?.role === 'secretary' ||
       req.user?.role === 'leader' ||
-      req.user?._id.toString() === id;
+      (req.user?._id as any).toString() === id;
 
     if (!canEdit) {
       res.status(403).json({
@@ -185,7 +184,7 @@ export const uploadAvatar = async (
     const { id } = req.params;
 
     // Check permissions
-    if (req.user?._id.toString() !== id && req.user?.role !== 'secretary' && req.user?.role !== 'leader') {
+    if ((req.user?._id as any).toString() !== id && req.user?.role !== 'secretary' && req.user?.role !== 'leader') {
       res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -374,13 +373,17 @@ export const batchImportUsers = async (
     
     // Parse file based on type
     if (req.file.originalname.endsWith('.csv')) {
-      const csvData = req.file.buffer.toString();
       // Parse CSV (implementation depends on CSV structure)
       // users = parseCSV(csvData);
     } else if (req.file.originalname.endsWith('.xlsx')) {
       const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      users = xlsx.utils.sheet_to_json(sheet);
+      const sheetName = workbook.SheetNames[0];
+      if (sheetName) {
+        const sheet = workbook.Sheets[sheetName];
+        if (sheet) {
+          users = xlsx.utils.sheet_to_json(sheet);
+        }
+      }
     }
 
     // Validate and create users

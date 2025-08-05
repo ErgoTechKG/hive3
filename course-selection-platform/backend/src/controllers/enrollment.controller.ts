@@ -1,11 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import Enrollment from '../models/Enrollment';
 import Course from '../models/Course';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 import logger from '../utils/logger';
 import { Parser } from 'json2csv';
-import PDFDocument from 'pdfkit';
 
 // Get enrollments with filters
 export const getEnrollments = async (
@@ -28,7 +27,7 @@ export const getEnrollments = async (
     
     // Students can only see their own enrollments
     if (req.user?.role === 'student') {
-      query.student = req.user._id;
+      query.student = (req.user._id as any);
     } else {
       if (student) query.student = student;
     }
@@ -96,8 +95,8 @@ export const getEnrollmentById = async (
     const canAccess = 
       req.user?.role === 'secretary' ||
       req.user?.role === 'leader' ||
-      enrollment.student._id.toString() === req.user?._id.toString() ||
-      (await Course.findById(enrollment.course)).professor.toString() === req.user?._id.toString();
+      enrollment.student._id.toString() === (req.user?._id as any).toString() ||
+      (await Course.findById(enrollment.course))?.professor.toString() === (req.user?._id as any).toString();
 
     if (!canAccess) {
       res.status(403).json({
@@ -155,7 +154,7 @@ export const submitPreferences = async (
 
     // Create enrollment records
     const enrollments = await Promise.all(
-      preferences.map(async (pref: any, index: number) => {
+      preferences.map(async (_pref: any, _index: number) => {
         const enrollment = new Enrollment({
           student: studentId,
           course: preferences[0].courseId, // Primary choice
@@ -237,7 +236,7 @@ export const runMatchingAlgorithm = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { semester, algorithm = 'priority' } = req.body;
+    const { semester } = req.body;
 
     // Get all pending enrollments
     const pendingEnrollments = await Enrollment.find({
@@ -256,8 +255,8 @@ export const runMatchingAlgorithm = async (
     const courseEnrolled = new Map();
     
     courses.forEach(course => {
-      courseCapacity.set(course._id.toString(), course.capacity);
-      courseEnrolled.set(course._id.toString(), 0);
+      courseCapacity.set((course._id as any).toString(), course.capacity);
+      courseEnrolled.set((course._id as any).toString(), 0);
     });
 
     // Simple priority-based matching algorithm
@@ -293,10 +292,12 @@ export const runMatchingAlgorithm = async (
 
       if (!matched) {
         // Try waitlist for first preference
-        const firstChoice = enrollment.preferences[0].courseId;
-        enrollment.course = firstChoice;
-        enrollment.status = 'waitlisted';
-        results.waitlisted++;
+        const firstChoice = enrollment.preferences[0]?.courseId;
+        if (firstChoice) {
+          enrollment.course = firstChoice;
+          enrollment.status = 'waitlisted';
+          results.waitlisted++;
+        }
       }
 
       await enrollment.save();
@@ -338,7 +339,7 @@ export const confirmEnrollment = async (
     }
 
     // Check ownership
-    if (enrollment.student.toString() !== req.user?._id.toString()) {
+    if (enrollment.student.toString() !== (req.user?._id as any).toString()) {
       res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -390,7 +391,7 @@ export const dropCourse = async (
     }
 
     // Check ownership
-    if (enrollment.student.toString() !== req.user?._id.toString()) {
+    if (enrollment.student.toString() !== (req.user?._id as any).toString()) {
       res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -466,7 +467,7 @@ export const professorReview = async (
 
     // Check if professor owns the course
     const course = await Course.findById(enrollment.course);
-    if (course?.professor.toString() !== req.user?._id.toString()) {
+    if (course?.professor.toString() !== (req.user?._id as any).toString()) {
       res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -474,9 +475,14 @@ export const professorReview = async (
       return;
     }
 
+    if (!req.user) {
+      res.status(401).json({ success: false, message: 'User not authenticated' });
+      return;
+    }
+    
     enrollment.professorApproval = {
       approved,
-      approvedBy: req.user._id,
+      approvedBy: (req.user._id as any),
       approvedAt: new Date(),
       comment
     };

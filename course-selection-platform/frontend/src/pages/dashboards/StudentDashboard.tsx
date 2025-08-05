@@ -74,15 +74,15 @@ const StudentDashboard: React.FC = () => {
     return <LinearProgress />;
   }
 
-  const stats = dashboardData?.stats || {};
-  const upcomingDeadlines = dashboardData?.upcomingDeadlines || [];
-  const recentActivities = dashboardData?.recentActivities || [];
+  const stats = dashboardData?.data  || {};
+  const upcomingDeadlines = dashboardData?.data?.upcomingDeadlines || [];
+  const recentActivities = dashboardData?.data?.recentActivities || [];
 
   // Enrollment status data for pie chart
   const enrollmentStatusData = [
-    { name: '已选中', value: stats.selectedCourses || 0, color: '#4caf50' },
-    { name: '待确认', value: stats.pendingConfirmation || 0, color: '#ff9800' },
-    { name: '候补', value: stats.waitlisted || 0, color: '#2196f3' },
+    { name: '已选中', value: (stats as any)?.selectedCourses || 0, color: '#4caf50' },
+    { name: '待确认', value: (stats as any)?.pendingConfirmation || 0, color: '#ff9800' },
+    { name: '候补', value: (stats as any)?.waitlisted || 0, color: '#2196f3' },
   ];
 
   return (
@@ -98,7 +98,7 @@ const StudentDashboard: React.FC = () => {
       </Box>
 
       {/* Important Alerts */}
-      {upcomingDeadlines.length > 0 && (
+      {Array.isArray(upcomingDeadlines) && upcomingDeadlines.length > 0 && (
         <Alert severity="warning" sx={{ mb: 3 }}>
           <Typography variant="subtitle2">
             紧急提醒：您有 {upcomingDeadlines.length} 个即将到期的任务！
@@ -111,16 +111,16 @@ const StudentDashboard: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="已选课程"
-            value={stats.enrolledCourses || 0}
+            value={(stats as any)?.enrolledCourses || 0}
             icon={<School />}
             color="primary"
-            trend={stats.enrolledTrend}
+            trend={(stats as any)?.enrolledTrend}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="待办任务"
-            value={stats.pendingTasks || 0}
+            value={(stats as any)?.pendingTasks || 0}
             icon={<Assignment />}
             color="warning"
             action={() => navigate('/tasks')}
@@ -129,7 +129,7 @@ const StudentDashboard: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="学习小组"
-            value={stats.studyGroups || 0}
+            value={(stats as any)?.studyGroups || 0}
             icon={<Group />}
             color="success"
           />
@@ -137,7 +137,7 @@ const StudentDashboard: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="本周学时"
-            value={stats.weeklyHours || 0}
+            value={(stats as any)?.weeklyHours || 0}
             icon={<Schedule />}
             color="info"
             suffix="小时"
@@ -169,7 +169,7 @@ const StudentDashboard: React.FC = () => {
                       当前学期：2025年春季
                     </Typography>
                     <Typography variant="h4" color="primary">
-                      {stats.totalCredits || 0} 学分
+                      {(stats as any)?.totalCredits || 0} 学分
                     </Typography>
                   </Box>
 
@@ -215,9 +215,9 @@ const StudentDashboard: React.FC = () => {
                 </Grid>
               </Grid>
 
-              {stats.pendingConfirmation > 0 && (
+              {(stats as any)?.pendingConfirmation > 0 && (
                 <Alert severity="warning" sx={{ mt: 2 }}>
-                  您有 {stats.pendingConfirmation} 门课程待确认，请尽快处理！
+                  您有 {(stats as any)?.pendingConfirmation} 门课程待确认，请尽快处理！
                   <Button
                     size="small"
                     sx={{ ml: 2 }}
@@ -298,7 +298,7 @@ const StudentDashboard: React.FC = () => {
               </Typography>
 
               <List>
-                {stats.studyGroups > 0 ? (
+                {(stats as any)?.studyGroups > 0 ? (
                   <>
                     <ListItem>
                       <Avatar sx={{ mr: 2 }}>A</Avatar>

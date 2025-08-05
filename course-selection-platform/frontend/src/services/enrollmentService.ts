@@ -1,10 +1,11 @@
 import axios from '../utils/axios';
+import { ApiResponse, PaginatedResponse, Enrollment } from '../types';
 
 interface EnrollmentFilters {
   student?: string;
   course?: string;
   semester?: string;
-  status?: string;
+  status?: 'pending' | 'enrolled' | 'waitlisted' | 'dropped' | 'completed';
   page?: number;
   limit?: number;
 }
@@ -20,62 +21,81 @@ interface MatchingOptions {
   algorithm?: 'priority' | 'lottery' | 'hybrid';
 }
 
+interface EnrollmentStatistics {
+  totalEnrollments: number;
+  enrollmentsByStatus: Record<string, number>;
+  waitlistLength: number;
+  dropoutRate: number;
+  popularityScore: number;
+  totalStudents: number;
+  submittedPreferences: number;
+  pendingSubmissions: number;
+  matchingRate: number;
+}
+
+interface MatchingResult {
+  matched: number;
+  waitlisted: number;
+  unmatched: number;
+  details: Array<{ studentId: string; courseId: string; status: string }>;
+}
+
 const enrollmentService = {
-  getEnrollments: async (filters?: EnrollmentFilters) => {
-    const response = await axios.get('/enrollments', { params: filters });
+  getEnrollments: async (filters?: EnrollmentFilters): Promise<PaginatedResponse<Enrollment>> => {
+    const response = await axios.get<PaginatedResponse<Enrollment>>('/enrollments', { params: filters });
     return response.data;
   },
 
-  getEnrollmentById: async (id: string) => {
-    const response = await axios.get(`/enrollments/${id}`);
+  getEnrollmentById: async (id: string): Promise<ApiResponse<{ enrollment: Enrollment }>> => {
+    const response = await axios.get<ApiResponse<{ enrollment: Enrollment }>>(`/enrollments/${id}`);
     return response.data;
   },
 
-  submitPreferences: async (semester: string, preferences: CoursePreference[]) => {
-    const response = await axios.post('/enrollments/preferences', {
+  submitPreferences: async (semester: string, preferences: CoursePreference[]): Promise<ApiResponse<{ preferences: CoursePreference[] }>> => {
+    const response = await axios.post<ApiResponse<{ preferences: CoursePreference[] }>>('/enrollments/preferences', {
       semester,
       preferences,
     });
     return response.data;
   },
 
-  updatePreferences: async (semester: string, preferences: CoursePreference[]) => {
-    const response = await axios.put('/enrollments/preferences', {
+  updatePreferences: async (semester: string, preferences: CoursePreference[]): Promise<ApiResponse<{ preferences: CoursePreference[] }>> => {
+    const response = await axios.put<ApiResponse<{ preferences: CoursePreference[] }>>('/enrollments/preferences', {
       semester,
       preferences,
     });
     return response.data;
   },
 
-  runMatchingAlgorithm: async (options: MatchingOptions) => {
-    const response = await axios.post('/enrollments/match', options);
+  runMatchingAlgorithm: async (options: MatchingOptions): Promise<ApiResponse<MatchingResult>> => {
+    const response = await axios.post<ApiResponse<MatchingResult>>('/enrollments/match', options);
     return response.data;
   },
 
-  confirmEnrollment: async (id: string) => {
-    const response = await axios.post(`/enrollments/${id}/confirm`);
+  confirmEnrollment: async (id: string): Promise<ApiResponse<{ enrollment: Enrollment }>> => {
+    const response = await axios.post<ApiResponse<{ enrollment: Enrollment }>>(`/enrollments/${id}/confirm`);
     return response.data;
   },
 
-  dropCourse: async (id: string, reason?: string) => {
-    const response = await axios.post(`/enrollments/${id}/drop`, { reason });
+  dropCourse: async (id: string, reason?: string): Promise<ApiResponse<void>> => {
+    const response = await axios.post<ApiResponse<void>>(`/enrollments/${id}/drop`, { reason });
     return response.data;
   },
 
-  professorReview: async (id: string, approved: boolean, comment?: string) => {
-    const response = await axios.post(`/enrollments/${id}/professor-review`, {
+  professorReview: async (id: string, approved: boolean, comment?: string): Promise<ApiResponse<{ enrollment: Enrollment }>> => {
+    const response = await axios.post<ApiResponse<{ enrollment: Enrollment }>>(`/enrollments/${id}/professor-review`, {
       approved,
       comment,
     });
     return response.data;
   },
 
-  getEnrollmentStatistics: async (semester: string) => {
-    const response = await axios.get(`/enrollments/statistics/${semester}`);
+  getEnrollmentStatistics: async (semester: string): Promise<ApiResponse<EnrollmentStatistics>> => {
+    const response = await axios.get<ApiResponse<EnrollmentStatistics>>(`/enrollments/statistics/${semester}`);
     return response.data;
   },
 
-  exportEnrollmentData: async (semester: string, format?: string) => {
+  exportEnrollmentData: async (semester: string, format?: string): Promise<Blob | ApiResponse<{ downloadUrl: string }>> => {
     const response = await axios.get(`/enrollments/export/${semester}`, {
       params: { format },
       responseType: format === 'csv' ? 'blob' : 'json',
@@ -83,34 +103,34 @@ const enrollmentService = {
     return response.data;
   },
 
-  getCourseWaitlist: async (courseId: string) => {
-    const response = await axios.get(`/enrollments/course/${courseId}/waitlist`);
+  getCourseWaitlist: async (courseId: string): Promise<PaginatedResponse<Enrollment>> => {
+    const response = await axios.get<PaginatedResponse<Enrollment>>(`/enrollments/course/${courseId}/waitlist`);
     return response.data;
   },
 
-  processWaitlist: async (courseId: string, count?: number) => {
-    const response = await axios.post(`/enrollments/course/${courseId}/process-waitlist`, {
+  processWaitlist: async (courseId: string, count?: number): Promise<ApiResponse<{ processed: number; notified: string[] }>> => {
+    const response = await axios.post<ApiResponse<{ processed: number; notified: string[] }>>(`/enrollments/course/${courseId}/process-waitlist`, {
       count,
     });
     return response.data;
   },
 
-  getMyEnrollments: async () => {
-    const response = await axios.get('/enrollments', {
+  getMyEnrollments: async (): Promise<PaginatedResponse<Enrollment>> => {
+    const response = await axios.get<PaginatedResponse<Enrollment>>('/enrollments', {
       params: { student: 'me' },
     });
     return response.data;
   },
 
-  getPendingReviews: async () => {
-    const response = await axios.get('/enrollments', {
+  getPendingReviews: async (): Promise<PaginatedResponse<Enrollment>> => {
+    const response = await axios.get<PaginatedResponse<Enrollment>>('/enrollments', {
       params: { needsReview: true },
     });
     return response.data;
   },
 
-  reviewApplication: async (enrollmentId: string, approved: boolean, comment: string) => {
-    const response = await axios.post(`/enrollments/${enrollmentId}/professor-review`, {
+  reviewApplication: async (enrollmentId: string, approved: boolean, comment: string): Promise<ApiResponse<{ enrollment: Enrollment }>> => {
+    const response = await axios.post<ApiResponse<{ enrollment: Enrollment }>>(`/enrollments/${enrollmentId}/professor-review`, {
       approved,
       comment,
     });

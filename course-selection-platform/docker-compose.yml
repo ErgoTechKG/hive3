@@ -9,9 +9,9 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password123
-      MONGO_INITDB_DATABASE: course-selection
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
     volumes:
       - mongodb_data:/data/db
       - ./database/init-scripts:/docker-entrypoint-initdb.d
@@ -25,7 +25,7 @@ services:
     restart: unless-stopped
     ports:
       - "6379:6379"
-    command: redis-server --appendonly yes --requirepass redis123
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     networks:
@@ -41,11 +41,11 @@ services:
     ports:
       - "3001:3001"
     environment:
-      NODE_ENV: production
-      MONGODB_URI: mongodb://admin:password123@mongodb:27017/course-selection?authSource=admin
-      REDIS_URL: redis://:redis123@redis:6379
-      JWT_SECRET: production-jwt-secret-change-this
-      JWT_REFRESH_SECRET: production-refresh-secret-change-this
+      NODE_ENV: ${NODE_ENV}
+      MONGODB_URI: ${MONGODB_URI}
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
     depends_on:
       - mongodb
       - redis
@@ -70,13 +70,13 @@ services:
     ports:
       - "3000:3000"
     environment:
-      REACT_APP_API_BASE_URL: http://localhost:3001/api/v1
+      REACT_APP_API_BASE_URL: ${REACT_APP_API_BASE_URL}
     depends_on:
       - backend
     networks:
       - course-selection-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
       interval: 30s
       timeout: 10s
       retries: 3

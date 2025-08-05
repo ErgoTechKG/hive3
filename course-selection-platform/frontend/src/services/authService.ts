@@ -1,4 +1,5 @@
 import axios from '../utils/axios';
+import { ApiResponse, AuthResponse, User } from '../types';
 
 interface LoginCredentials {
   username: string;
@@ -17,47 +18,53 @@ interface RegisterData {
   phone: string;
 }
 
+interface AuthTokenResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
 const authService = {
-  login: async (credentials: LoginCredentials) => {
-    const response = await axios.post('/auth/login', credentials);
+  login: async (credentials: LoginCredentials): Promise<ApiResponse<AuthResponse>> => {
+    const response = await axios.post<ApiResponse<AuthResponse>>('/auth/login', credentials);
     return response.data;
   },
 
-  register: async (data: RegisterData) => {
-    const response = await axios.post('/auth/register', data);
+  register: async (data: RegisterData): Promise<ApiResponse<AuthResponse>> => {
+    const response = await axios.post<ApiResponse<AuthResponse>>('/auth/register', data);
     return response.data;
   },
 
-  logout: async () => {
-    const response = await axios.post('/auth/logout');
+  logout: async (): Promise<ApiResponse<void>> => {
+    const response = await axios.post<ApiResponse<void>>('/auth/logout');
     return response.data;
   },
 
-  refreshToken: async (refreshToken: string) => {
-    const response = await axios.post('/auth/refresh-token', { refreshToken });
+  refreshToken: async (refreshToken: string): Promise<ApiResponse<AuthTokenResponse>> => {
+    const response = await axios.post<ApiResponse<AuthTokenResponse>>('/auth/refresh-token', { refreshToken });
     return response.data;
   },
 
-  getCurrentUser: async () => {
-    const response = await axios.get('/auth/me');
+  getCurrentUser: async (): Promise<ApiResponse<{ user: User }>> => {
+    const response = await axios.get<ApiResponse<{ user: User }>>('/auth/me');
     return response.data;
   },
 
-  changePassword: async (currentPassword: string, newPassword: string) => {
-    const response = await axios.put('/auth/change-password', {
+  changePassword: async (currentPassword: string, newPassword: string): Promise<ApiResponse<void>> => {
+    const response = await axios.put<ApiResponse<void>>('/auth/change-password', {
       currentPassword,
       newPassword,
     });
     return response.data;
   },
 
-  forgotPassword: async (email: string) => {
-    const response = await axios.post('/auth/forgot-password', { email });
+  forgotPassword: async (email: string): Promise<ApiResponse<void>> => {
+    const response = await axios.post<ApiResponse<void>>('/auth/forgot-password', { email });
     return response.data;
   },
 
-  resetPassword: async (token: string, password: string) => {
-    const response = await axios.post('/auth/reset-password', { token, password });
+  resetPassword: async (token: string, password: string): Promise<ApiResponse<void>> => {
+    const response = await axios.post<ApiResponse<void>>('/auth/reset-password', { token, password });
     return response.data;
   },
 };

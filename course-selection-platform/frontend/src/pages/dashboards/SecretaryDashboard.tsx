@@ -135,16 +135,16 @@ const SecretaryDashboard: React.FC = () => {
     return <LinearProgress />;
   }
 
-  const stats = dashboardData?.stats || {};
-  const workflowStatus = dashboardData?.workflowStatus || {};
-  const departmentStats = dashboardData?.departmentStats || [];
+  const stats = dashboardData?.data  || {};
+  const workflowStatus = dashboardData?.data?.workflowStatus || {} as any;
+  const departmentStats = dashboardData?.data?.departmentStats || [];
 
   // Course status distribution for pie chart
   const courseStatusData = [
-    { name: '草稿', value: stats.draftCourses || 0, color: '#9e9e9e' },
-    { name: '待审批', value: stats.pendingApproval || 0, color: '#ff9800' },
-    { name: '已批准', value: stats.approvedCourses || 0, color: '#2196f3' },
-    { name: '已发布', value: stats.publishedCourses || 0, color: '#4caf50' },
+    { name: '草稿', value: (stats as any)?.draftCourses || 0, color: '#9e9e9e' },
+    { name: '待审批', value: (stats as any)?.pendingApproval || 0, color: '#ff9800' },
+    { name: '已批准', value: (stats as any)?.approvedCourses || 0, color: '#2196f3' },
+    { name: '已发布', value: (stats as any)?.publishedCourses || 0, color: '#4caf50' },
   ];
 
   return (
@@ -189,7 +189,7 @@ const SecretaryDashboard: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="待审批课程"
-            value={stats.pendingApproval || 0}
+            value={(stats as any)?.pendingApproval || 0}
             icon={<School />}
             color="warning"
             action={() => navigate('/courses?status=pending_approval')}
@@ -198,25 +198,25 @@ const SecretaryDashboard: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="未分配学生"
-            value={stats.unassignedStudents || 0}
+            value={(stats as any)?.unassignedStudents || 0}
             icon={<People />}
             color="error"
-            trend={stats.unassignedTrend}
+            trend={(stats as any)?.unassignedTrend}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="任务完成率"
-            value={`${stats.taskCompletionRate || 0}%`}
+            value={`${(stats as any)?.taskCompletionRate || 0}%`}
             icon={<Assignment />}
             color="success"
-            trend={stats.taskTrend}
+            trend={(stats as any)?.taskTrend}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="系统负载"
-            value={`${stats.systemLoad || 0}%`}
+            value={`${(stats as any)?.systemLoad || 0}%`}
             icon={<Timeline />}
             color="info"
           />
@@ -340,11 +340,11 @@ const SecretaryDashboard: React.FC = () => {
                   <ListItem 
                     button 
                     onClick={() => publishMutation.mutate('batch')}
-                    disabled={stats.approvedCourses === 0}
+                    disabled={(stats as any)?.approvedCourses === 0}
                   >
                     <ListItemText 
                       primary="批量发布课程" 
-                      secondary={`${stats.approvedCourses || 0} 门待发布`}
+                      secondary={`${(stats as any)?.approvedCourses || 0} 门待发布`}
                     />
                     <Publish />
                   </ListItem>
@@ -385,24 +385,24 @@ const SecretaryDashboard: React.FC = () => {
                       <List dense>
                         <ListItem>
                           <ListItemText primary="总学生数" />
-                          <Typography variant="h6">{enrollmentStats?.totalStudents || 0}</Typography>
+                          <Typography variant="h6">{enrollmentStats?.data?.totalStudents || 0}</Typography>
                         </ListItem>
                         <ListItem>
                           <ListItemText primary="已提交志愿" />
                           <Typography variant="h6" color="primary">
-                            {enrollmentStats?.submittedPreferences || 0}
+                            {enrollmentStats?.data?.submittedPreferences || 0}
                           </Typography>
                         </ListItem>
                         <ListItem>
                           <ListItemText primary="未提交志愿" />
                           <Typography variant="h6" color="error">
-                            {enrollmentStats?.pendingSubmissions || 0}
+                            {enrollmentStats?.data?.pendingSubmissions || 0}
                           </Typography>
                         </ListItem>
                         <ListItem>
                           <ListItemText primary="匹配成功率" />
                           <Typography variant="h6" color="success.main">
-                            {enrollmentStats?.matchingRate || 0}%
+                            {enrollmentStats?.data?.matchingRate || 0}%
                           </Typography>
                         </ListItem>
                       </List>

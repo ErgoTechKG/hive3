@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci && npm cache clean --force
+RUN npm ci --legacy-peer-deps && npm cache clean --force
 
 # Copy source code
 COPY . .
@@ -19,14 +19,16 @@ RUN npm run build
 # Production stage with nginx
 FROM nginx:alpine AS production
 
+# Install wget for health checks (as root before switching users)
+RUN apk add --no-cache wget
+
 # Copy custom nginx config
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copy built application from builder stage
 COPY --from=builder /app/build /usr/share/nginx/html
 
-# Create non-root user for nginx
-RUN addgroup -g 1001 -S nginx
+# Create non-root user for nginx (nginx group already exists in the base image)
 RUN adduser -S nginxuser -u 1001 -G nginx
 
 # Change ownership of nginx directories
@@ -38,9 +40,9 @@ USER nginxuser
 # Expose port
 EXPOSE 3000
 
-# Health check
+# Health check using wget
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000 || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]

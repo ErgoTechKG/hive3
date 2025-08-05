@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import config from '../config';
 import User, { IUser } from '../models/User';
-import logger from '../utils/logger';
 
 export interface AuthRequest extends Request {
   user?: IUser;
@@ -13,7 +12,7 @@ export const authenticate = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<Response | void> => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
 
@@ -30,14 +29,14 @@ export const authenticate = async (
 
     req.user = user;
     req.token = token;
-    next();
+    return next();
   } catch (error) {
-    res.status(401).json({ success: false, message: 'Please authenticate' });
+    return res.status(401).json({ success: false, message: 'Please authenticate' });
   }
 };
 
 export const authorize = (...roles: string[]) => {
-  return (req: AuthRequest, res: Response, next: NextFunction): void => {
+  return (req: AuthRequest, res: Response, next: NextFunction): Response | void => {
     if (!req.user) {
       return res.status(401).json({ 
         success: false, 
@@ -52,7 +51,7 @@ export const authorize = (...roles: string[]) => {
       });
     }
 
-    next();
+    return next();
   };
 };
 

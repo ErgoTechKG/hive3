@@ -6,7 +6,7 @@ import config from '../config';
 
 // Configure storage
 const storage = multer.diskStorage({
-  destination: (req: Request, file: Express.Multer.File, cb) => {
+  destination: (_req: Request, file: Express.Multer.File, cb) => {
     let uploadPath = 'uploads/';
     
     if (file.fieldname === 'avatar') {
@@ -19,7 +19,7 @@ const storage = multer.diskStorage({
     
     cb(null, uploadPath);
   },
-  filename: (req: Request, file: Express.Multer.File, cb) => {
+  filename: (_req: Request, file: Express.Multer.File, cb) => {
     // Generate unique filename
     const uniqueSuffix = crypto.randomBytes(16).toString('hex');
     const ext = path.extname(file.originalname);
@@ -29,7 +29,7 @@ const storage = multer.diskStorage({
 });
 
 // File filter
-const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   if (config.upload.allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {

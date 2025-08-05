@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../store';
 import AuthContext from '../contexts/AuthContext';
 import { login, logout, register } from '../store/slices/authSlice';
+import { RegisterUserData } from '../types/components';
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -22,7 +23,7 @@ export const useAuth = () => {
     logout: async () => {
       return dispatch(logout()).unwrap();
     },
-    register: async (userData: any) => {
+    register: async (userData: RegisterUserData) => {
       return dispatch(register(userData)).unwrap();
     },
   };

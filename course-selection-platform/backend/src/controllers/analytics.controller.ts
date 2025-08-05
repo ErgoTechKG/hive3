@@ -1,13 +1,12 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import User from '../models/User';
 import Course from '../models/Course';
 import Enrollment from '../models/Enrollment';
 import Task from '../models/Task';
 import logger from '../utils/logger';
-import PDFDocument from 'pdfkit';
 import { Parser } from 'json2csv';
-import { startOfWeek, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { subMonths } from 'date-fns';
 
 // Get dashboard statistics based on role
 export const getDashboardStats = async (
@@ -21,10 +20,10 @@ export const getDashboardStats = async (
 
     switch (role) {
       case 'student':
-        stats = await getStudentStats(req.user!._id);
+        stats = await getStudentStats(req.user!._id as string);
         break;
       case 'professor':
-        stats = await getProfessorStats(req.user!._id);
+        stats = await getProfessorStats(req.user!._id as string);
         break;
       case 'secretary':
         stats = await getSecretaryStats();
@@ -71,7 +70,7 @@ async function getStudentStats(userId: string) {
   const weeklyHours = enrollments
     .filter(e => e.status === 'confirmed')
     .reduce((sum, e: any) => {
-      return sum + e.course.schedule.reduce((hrs: number, s: any) => hrs + 2, 0);
+      return sum + e.course.schedule.reduce((hrs: number, _s: any) => hrs + 2, 0);
     }, 0);
 
   // Upcoming deadlines
@@ -624,23 +623,24 @@ export const generateAnnualReport = async (
 ): Promise<void> => {
   try {
     const { year } = req.params;
+    const yearStr = year || '2025';
 
     // Comprehensive annual statistics
     const report = {
-      year: parseInt(year),
+      year: parseInt(yearStr),
       summary: {
         totalCourses: await Course.countDocuments({
           createdAt: {
-            $gte: new Date(`${year}-01-01`),
-            $lt: new Date(`${parseInt(year) + 1}-01-01`)
+            $gte: new Date(`${yearStr}-01-01`),
+            $lt: new Date(`${parseInt(yearStr) + 1}-01-01`)
           }
         }),
         totalStudents: await User.countDocuments({ role: 'student' }),
         totalProfessors: await User.countDocuments({ role: 'professor' }),
         totalEnrollments: await Enrollment.countDocuments({
           createdAt: {
-            $gte: new Date(`${year}-01-01`),
-            $lt: new Date(`${parseInt(year) + 1}-01-01`)
+            $gte: new Date(`${yearStr}-01-01`),
+            $lt: new Date(`${parseInt(yearStr) + 1}-01-01`)
           }
         })
       },
@@ -648,8 +648,8 @@ export const generateAnnualReport = async (
         {
           $match: {
             createdAt: {
-              $gte: new Date(`${year}-01-01`),
-              $lt: new Date(`${parseInt(year) + 1}-01-01`)
+              $gte: new Date(`${yearStr}-01-01`),
+              $lt: new Date(`${parseInt(yearStr) + 1}-01-01`)
             }
           }
         },
@@ -681,7 +681,7 @@ export const generateAnnualReport = async (
 
 // Get real-time statistics
 export const getRealtimeStats = async (
-  req: AuthRequest,
+  _req: AuthRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -720,7 +720,8 @@ export const exportAnalytics = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { type, format = 'csv', startDate, endDate } = req.query;
+    const { type, format = 'csv' } = req.query;
+    const { startDate: _startDate, endDate: _endDate } = req.query;
 
     let data: any[];
     
@@ -770,7 +771,8 @@ export const getPredictiveAnalytics = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { type, semester } = req.query;
+    const { type } = req.query;
+    const { semester: _semester } = req.query;
 
     // Mock predictive data
     const predictions = {
@@ -861,7 +863,7 @@ export const getUnassignedStudents = async () => {
   });
 
   const unassignedStudents = allStudents.filter(
-    student => !assignedStudentIds.some(id => id.toString() === student._id.toString())
+    student => !assignedStudentIds.some(id => id.toString() === (student._id as any).toString())
   );
 
   return { data: unassignedStudents };

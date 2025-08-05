@@ -41,9 +41,21 @@ export const login = createAsyncThunk(
   }
 );
 
+interface RegisterUserData {
+  username: string;
+  password: string;
+  email: string;
+  role: string;
+  userId: string;
+  nameCn: string;
+  nameEn: string;
+  department: string;
+  phone: string;
+}
+
 export const register = createAsyncThunk(
   'auth/register',
-  async (userData: any) => {
+  async (userData: RegisterUserData) => {
     const response = await authService.register(userData);
     return response.data;
   }

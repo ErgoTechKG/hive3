@@ -1,10 +1,9 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import Task from '../models/Task';
-import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 import logger from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
-import { getIO } from '../socket';
+import { getIO as getSocketIO } from '../socket';
 
 // Get tasks with filters
 export const getTasks = async (
@@ -13,6 +12,11 @@ export const getTasks = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    if (!req.user?._id) {
+      res.status(401).json({ success: false, message: 'User not authenticated' });
+      return;
+    }
+
     const {
       type,
       status,
@@ -27,9 +31,9 @@ export const getTasks = async (
     
     // Filter by sender or receiver
     if (role === 'sender') {
-      query.sender = req.user?._id;
+      query.sender = req.user._id;
     } else {
-      query.receivers = req.user?._id;
+      query.receivers = req.user._id;
     }
     
     if (type) query.type = type;
@@ -87,11 +91,17 @@ export const getTaskById = async (
     }
 
     // Check access permissions
+    if (!req.user) {
+      res.status(401).json({ success: false, message: 'User not authenticated' });
+      return;
+    }
+    
+    const userId = (req.user?._id as any).toString();
     const hasAccess = 
-      task.sender._id.toString() === req.user?._id.toString() ||
-      task.receivers.some((r: any) => r._id.toString() === req.user?._id.toString()) ||
-      req.user?.role === 'secretary' ||
-      req.user?.role === 'leader';
+      task.sender._id.toString() === userId ||
+      task.receivers.some((r: any) => r._id.toString() === userId) ||
+      req.user.role === 'secretary' ||
+      req.user.role === 'leader';
 
     if (!hasAccess) {
       res.status(403).json({
@@ -117,6 +127,11 @@ export const createTask = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    if (!req.user?._id) {
+      res.status(401).json({ success: false, message: 'User not authenticated' });
+      return;
+    }
+
     const {
       title,
       description,
@@ -140,7 +155,7 @@ export const createTask = async (
       title,
       description,
       type,
-      sender: req.user?._id,
+      sender: req.user._id,
       receivers,
       deadline,
       priority,
@@ -156,10 +171,10 @@ export const createTask = async (
     await task.populate('receivers', 'nameCn nameEn');
 
     // Send real-time notifications
-    const io = getIO();
+    const io = getSocketIO();
     if (io) {
       receivers.forEach((receiverId: string) => {
-        io.to(`user:${receiverId}`).emit('task:new', {
+        (io as any).to(`user:${receiverId}`).emit('task:new', {
           task: {
             _id: task._id,
             title: task.title,
@@ -204,7 +219,7 @@ export const updateTaskResponse = async (
     }
 
     // Check if user is a receiver
-    if (!task.receivers.includes(req.user?._id)) {
+    if (!task.receivers.includes(req.user?._id as any)) {
       res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -220,11 +235,11 @@ export const updateTaskResponse = async (
 
     // Update or add response
     const existingResponseIndex = task.responses.findIndex(
-      r => r.userId.toString() === req.user?._id.toString()
+      r => r.userId.toString() === (req.user?._id as any).toString()
     );
 
     const response = {
-      userId: req.user._id,
+      userId: req.user?._id as any,
       status,
       message,
       attachments,
@@ -260,12 +275,12 @@ export const updateTaskResponse = async (
     await task.save();
 
     // Send real-time notification to sender
-    const io = getIO();
+    const io = getSocketIO();
     if (io) {
-      io.to(`user:${task.sender}`).emit('task:statusUpdate', {
+      (io as any).to(`user:${task.sender}`).emit('task:statusUpdate', {
         taskId: task._id,
         status: task.status,
-        userId: req.user._id,
+        userId: req.user?._id as any,
         userResponse: status
       });
     }
@@ -301,7 +316,7 @@ export const markAsRead = async (
     }
 
     // Check if user is a receiver
-    if (!task.receivers.includes(req.user?._id)) {
+    if (!task.receivers.includes(req.user?._id as any)) {
       res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -311,12 +326,12 @@ export const markAsRead = async (
 
     // Add read response
     const existingResponse = task.responses.find(
-      r => r.userId.toString() === req.user?._id.toString()
+      r => r.userId.toString() === (req.user?._id as any).toString()
     );
 
     if (!existingResponse) {
       task.responses.push({
-        userId: req.user._id,
+        userId: req.user?._id as any,
         status: 'read',
         respondedAt: new Date()
       });
@@ -360,7 +375,7 @@ export const sendReminder = async (
     }
 
     // Check if user is the sender
-    if (task.sender.toString() !== req.user?._id.toString() &&
+    if (task.sender.toString() !== (req.user?._id as any).toString() &&
         req.user?.role !== 'secretary' &&
         req.user?.role !== 'leader') {
       res.status(403).json({
@@ -383,10 +398,10 @@ export const sendReminder = async (
     await task.save();
 
     // Send real-time reminders
-    const io = getIO();
+    const io = getSocketIO();
     if (io) {
       pendingReceivers.forEach((receiver: any) => {
-        io.to(`user:${receiver._id}`).emit('task:reminder', {
+        (io as any).to(`user:${receiver._id}`).emit('task:reminder', {
           taskId: task._id,
           title: task.title,
           level,
@@ -477,7 +492,7 @@ export const getTaskStatistics = async (
 
 // Get overdue tasks
 export const getOverdueTasks = async (
-  req: AuthRequest,
+  _req: AuthRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -652,9 +667,3 @@ export const getMyTasks = async (
   }
 };
 
-// Helper to get Socket.IO instance
-function getIO() {
-  // This would be implemented to get the Socket.IO instance
-  // For now, returning null to avoid errors
-  return null;
-}

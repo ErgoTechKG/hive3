@@ -1,6 +1,6 @@
 const config = {
-  API_URL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
-  SOCKET_URL: process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000',
+  API_URL: process.env['REACT_APP_API_URL'] || 'http://localhost:5000/api',
+  SOCKET_URL: process.env['REACT_APP_SOCKET_URL'] || 'http://localhost:5000',
   APP_NAME: '选课系统',
   APP_NAME_EN: 'Course Selection System',
   UNIVERSITY: '华中科技大学机械学院',
@@ -8,9 +8,9 @@ const config = {
   
   // Feature flags
   FEATURES: {
-    SOCIAL_NETWORK: process.env.REACT_APP_FEATURE_SOCIAL_NETWORK === 'true',
-    ANALYTICS: process.env.REACT_APP_FEATURE_ANALYTICS === 'true',
-    EXPORT: process.env.REACT_APP_FEATURE_EXPORT === 'true',
+    SOCIAL_NETWORK: process.env['REACT_APP_FEATURE_SOCIAL_NETWORK'] === 'true',
+    ANALYTICS: process.env['REACT_APP_FEATURE_ANALYTICS'] === 'true',
+    EXPORT: process.env['REACT_APP_FEATURE_EXPORT'] === 'true',
   },
   
   // Pagination

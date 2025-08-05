@@ -126,12 +126,12 @@ const ProfessorDashboard: React.FC = () => {
     return <LinearProgress />;
   }
 
-  const stats = dashboardData?.stats || {};
-  const weeklyActivity = dashboardData?.weeklyActivity || [];
-  const studentPerformance = dashboardData?.studentPerformance || [];
+  const stats = dashboardData?.data  || {};
+  const weeklyActivity = dashboardData?.data  || [];
+  const studentPerformance = dashboardData?.data || [];
 
   // Course enrollment trend data
-  const enrollmentTrendData = weeklyActivity.map((item: any) => ({
+  const enrollmentTrendData = (weeklyActivity as any[]).map((item: any) => ({
     date: format(new Date(item.date), 'MM-dd'),
     applications: item.applications,
     confirmed: item.confirmed,
@@ -150,7 +150,7 @@ const ProfessorDashboard: React.FC = () => {
       </Box>
 
       {/* Alerts */}
-      {pendingReviews?.data?.length > 0 && (
+      {pendingReviews?.data && pendingReviews.data.length > 0 && (
         <Alert severity="warning" sx={{ mb: 3 }}>
           您有 {pendingReviews.data.length} 个待审核的学生申请
         </Alert>
@@ -161,7 +161,7 @@ const ProfessorDashboard: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="我的课程"
-            value={stats.totalCourses || 0}
+            value={(stats as any)?.totalCourses || 0}
             icon={<School />}
             color="primary"
             action={() => navigate('/courses/professor/' + user?._id)}
@@ -170,16 +170,16 @@ const ProfessorDashboard: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="学生总数"
-            value={stats.totalStudents || 0}
+            value={(stats as any)?.totalStudents || 0}
             icon={<Group />}
             color="success"
-            trend={stats.studentTrend}
+            trend={(stats as any)?.studentTrend}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="待审申请"
-            value={stats.pendingApplications || 0}
+            value={(stats as any)?.pendingApplications || 0}
             icon={<PersonAdd />}
             color="warning"
           />
@@ -187,7 +187,7 @@ const ProfessorDashboard: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="平均评分"
-            value={stats.averageRating || 0}
+            value={(stats as any)?.averageRating || 0}
             icon={<Assessment />}
             color="info"
             suffix="/5"
@@ -364,25 +364,25 @@ const ProfessorDashboard: React.FC = () => {
                     <ListItem>
                       <ListItemText primary="报名人数" />
                       <Typography variant="h6">
-                        {courseStats.totalApplications}
+                        {courseStats?.data?.totalApplications || 0}
                       </Typography>
                     </ListItem>
                     <ListItem>
                       <ListItemText primary="选中率" />
                       <Typography variant="h6" color="primary">
-                        {courseStats.enrollmentRate}%
+                        {courseStats?.data?.enrollmentRate || 0}%
                       </Typography>
                     </ListItem>
                     <ListItem>
                       <ListItemText primary="退选率" />
                       <Typography variant="h6" color="error">
-                        {courseStats.dropRate}%
+                        {courseStats?.data?.dropRate || 0}%
                       </Typography>
                     </ListItem>
                     <ListItem>
                       <ListItemText primary="平均成绩" />
                       <Typography variant="h6">
-                        {courseStats.averageGrade || 'N/A'}
+                        {courseStats?.data?.averageGrade || 'N/A'}
                       </Typography>
                     </ListItem>
                   </List>

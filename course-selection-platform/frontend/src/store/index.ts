@@ -4,25 +4,15 @@ import storage from 'redux-persist/lib/storage';
 import { combineReducers } from 'redux';
 
 import authReducer from './slices/authSlice';
-import userReducer from './slices/userSlice';
-import courseReducer from './slices/courseSlice';
-import enrollmentReducer from './slices/enrollmentSlice';
-import taskReducer from './slices/taskSlice';
-import uiReducer from './slices/uiSlice';
 
 const rootReducer = combineReducers({
   auth: authReducer,
-  user: userReducer,
-  course: courseReducer,
-  enrollment: enrollmentReducer,
-  task: taskReducer,
-  ui: uiReducer,
 });
 
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['auth', 'ui'], // Only persist auth and ui state
+  whitelist: ['auth'], // Only persist auth state
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

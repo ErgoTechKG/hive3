@@ -9,11 +9,21 @@ interface AuthenticatedSocket extends Socket {
   userRole?: string;
 }
 
-const socketHandler = (io: SocketServer, redisClient: any) => {
+let ioInstance: SocketServer;
+
+export const getIO = (): SocketServer => {
+  if (!ioInstance) {
+    throw new Error('Socket.io not initialized');
+  }
+  return ioInstance;
+};
+
+const socketHandler = (io: SocketServer, _redisClient: any) => {
+  ioInstance = io;
   // Authentication middleware
   io.use(async (socket: AuthenticatedSocket, next) => {
     try {
-      const token = socket.handshake.auth.token;
+      const token = socket.handshake.auth['token'];
       if (!token) {
         return next(new Error('Authentication required'));
       }

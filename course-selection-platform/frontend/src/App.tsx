@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+// import React from 'react'; // Not needed with new JSX transform
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Provider } from 'react-redux';
@@ -16,6 +16,7 @@ import { SocketProvider } from './contexts/SocketContext';
 // Layouts
 import PrivateRoute from './components/common/PrivateRoute';
 import DashboardLayout from './layouts/DashboardLayout';
+import DashboardRouter from './components/common/DashboardRouter';
 
 // Pages
 import Login from './pages/Login';
@@ -23,10 +24,6 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 
 // Role-specific dashboards
-import LeaderDashboard from './pages/dashboards/LeaderDashboard';
-import SecretaryDashboard from './pages/dashboards/SecretaryDashboard';
-import ProfessorDashboard from './pages/dashboards/ProfessorDashboard';
-import StudentDashboard from './pages/dashboards/StudentDashboard';
 
 // Common pages
 import Profile from './pages/Profile';
@@ -82,8 +79,7 @@ function App() {
                       <Route path="/forgot-password" element={<ForgotPassword />} />
 
                       {/* Private routes */}
-                      <Route element={<PrivateRoute />}>
-                        <Route element={<DashboardLayout />}>
+                      <Route element={<PrivateRoute><DashboardLayout /></PrivateRoute>}>
                           {/* Role-based dashboard routes */}
                           <Route path="/" element={<DashboardRouter />} />
                           
@@ -111,7 +107,6 @@ function App() {
                           <Route path="/analytics" element={<AnalyticsDashboard />} />
                           <Route path="/analytics/courses" element={<CourseAnalytics />} />
                           <Route path="/analytics/annual-report" element={<AnnualReport />} />
-                        </Route>
                       </Route>
 
                       {/* 404 */}
@@ -129,27 +124,6 @@ function App() {
   );
 }
 
-// Dashboard router based on user role
-function DashboardRouter() {
-  const { user } = useAuth();
-  
-  if (!user) return <Navigate to="/login" />;
-  
-  switch (user.role) {
-    case 'leader':
-      return <LeaderDashboard />;
-    case 'secretary':
-      return <SecretaryDashboard />;
-    case 'professor':
-      return <ProfessorDashboard />;
-    case 'student':
-      return <StudentDashboard />;
-    default:
-      return <Navigate to="/login" />;
-  }
-}
 
-// Import after declaration to avoid circular dependency
-import { useAuth } from './hooks/useAuth';
 
 export default App;

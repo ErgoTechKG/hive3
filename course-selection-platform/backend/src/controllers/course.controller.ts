@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import Course, { ICourse } from '../models/Course';
+import { Response, NextFunction } from 'express';
+import Course from '../models/Course';
 import Enrollment from '../models/Enrollment';
 import { AuthRequest } from '../middleware/auth';
 import logger from '../utils/logger';
@@ -47,7 +47,7 @@ export const getCourses = async (
       // Professors see their own courses regardless of status
       query.$or = [
         { status: 'published' },
-        { professor: req.user._id }
+        { professor: (req.user as any)._id }
       ];
     }
 
@@ -169,7 +169,7 @@ export const updateCourse = async (
     const canEdit = 
       req.user?.role === 'secretary' ||
       req.user?.role === 'leader' ||
-      (req.user?.role === 'professor' && course.professor.toString() === req.user._id.toString());
+      (req.user?.role === 'professor' && course.professor.toString() === (req.user._id as any).toString());
 
     if (!canEdit) {
       res.status(403).json({
@@ -221,7 +221,7 @@ export const deleteCourse = async (
     const canDelete = 
       req.user?.role === 'secretary' ||
       req.user?.role === 'leader' ||
-      (req.user?.role === 'professor' && course.professor.toString() === req.user._id.toString());
+      (req.user?.role === 'professor' && course.professor.toString() === (req.user._id as any).toString());
 
     if (!canDelete) {
       res.status(403).json({
@@ -273,7 +273,7 @@ export const submitForApproval = async (
     }
 
     // Check ownership
-    if (course.professor.toString() !== req.user?._id.toString()) {
+    if (course.professor.toString() !== (req.user?._id as any).toString()) {
       res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -312,7 +312,7 @@ export const approveCourse = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const { approved, comment } = req.body;
+    const { approved, comment: _comment } = req.body;
 
     const course = await Course.findById(id);
     if (!course) {
@@ -332,7 +332,7 @@ export const approveCourse = async (
     }
 
     course.status = approved ? 'approved' : 'draft';
-    course.approvedBy = req.user?._id;
+    course.approvedBy = req.user?._id as any;
     course.approvedAt = new Date();
 
     await course.save();

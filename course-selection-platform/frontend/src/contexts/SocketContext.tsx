@@ -25,7 +25,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
-  const { accessToken, user } = useSelector((state: RootState) => state.auth);
+  const authState = useSelector((state: RootState) => state.auth);
+  const { accessToken, user } = authState;
 
   useEffect(() => {
     if (accessToken && user) {
@@ -57,11 +58,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         enqueueSnackbar(`New task: ${task.title}`, { variant: 'info' });
       });
 
-      newSocket.on('task:statusUpdate', ({ taskId, status }) => {
+      newSocket.on('task:statusUpdate', ({ status }: { taskId: string; status: string }) => {
         enqueueSnackbar(`Task status updated to ${status}`, { variant: 'info' });
       });
 
-      newSocket.on('enrollment:statusChanged', ({ courseId, status }) => {
+      newSocket.on('enrollment:statusChanged', ({ status }: { courseId: string; status: string }) => {
         enqueueSnackbar(`Enrollment status changed to ${status}`, { variant: 'info' });
       });
 
@@ -89,7 +90,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setSocket(null);
       }
     }
-  }, [accessToken, user]);
+    return undefined;
+  }, [accessToken, user, enqueueSnackbar, socket]);
 
   const emit = (event: string, data?: any) => {
     if (socket && isConnected) {

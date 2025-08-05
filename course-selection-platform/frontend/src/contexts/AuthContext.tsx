@@ -4,10 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { RootState, AppDispatch } from '../store';
 import { getCurrentUser, refreshAccessToken, logout } from '../store/slices/authSlice';
 import { setAuthToken } from '../utils/axios';
+import { User } from '../types';
 
 interface AuthContextProps {
   isAuthenticated: boolean;
-  user: any;
+  user: User | null;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -19,9 +20,8 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { user, accessToken, refreshToken, isAuthenticated } = useSelector(
-    (state: RootState) => state.auth
-  );
+  const authState = useSelector((state: RootState) => state.auth);
+  const { user, accessToken, refreshToken, isAuthenticated } = authState;
   const [loading, setLoading] = useState(true);
 
   // Initialize auth state on mount
@@ -49,7 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     initAuth();
-  }, []);
+  }, [accessToken, refreshToken, dispatch, navigate]);
 
   // Set up token refresh interval
   useEffect(() => {
@@ -64,6 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [isAuthenticated, refreshToken, dispatch]);
 
   const handleLogin = useCallback(async (username: string, password: string) => {

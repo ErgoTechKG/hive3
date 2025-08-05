@@ -5,7 +5,6 @@ import {
   Box,
   Typography,
   IconButton,
-  Chip,
 } from '@mui/material';
 import { TrendingUp, TrendingDown, ArrowForward } from '@mui/icons-material';
 

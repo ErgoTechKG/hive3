@@ -1,10 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import User, { IUser } from '../models/User';
+import User from '../models/User';
 import { generateAuthToken, generateRefreshToken, verifyRefreshToken, AuthRequest } from '../middleware/auth';
 import logger from '../utils/logger';
-import { sendEmail } from '../utils/email';
 import config from '../config';
 
 export const register = async (
@@ -44,12 +42,12 @@ export const register = async (
     await user.save();
 
     // Generate tokens
-    const accessToken = generateAuthToken(user._id.toString());
-    const refreshToken = generateRefreshToken(user._id.toString());
+    const accessToken = generateAuthToken((user._id as any).toString());
+    const refreshToken = generateRefreshToken((user._id as any).toString());
 
     // Remove password from response
     const userResponse = user.toObject();
-    delete userResponse.password;
+    delete (userResponse as any).password;
 
     logger.info(`New user registered: ${username} (${role})`);
 
@@ -99,12 +97,12 @@ export const login = async (
     await user.save();
 
     // Generate tokens
-    const accessToken = generateAuthToken(user._id.toString());
-    const refreshToken = generateRefreshToken(user._id.toString());
+    const accessToken = generateAuthToken((user._id as any).toString());
+    const refreshToken = generateRefreshToken((user._id as any).toString());
 
     // Remove password from response
     const userResponse = user.toObject();
-    delete userResponse.password;
+    delete (userResponse as any).password;
 
     logger.info(`User logged in: ${username}`);
 
@@ -125,7 +123,7 @@ export const login = async (
 export const refreshToken = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): Promise<void> => {
   try {
     const { refreshToken } = req.body;
@@ -141,8 +139,8 @@ export const refreshToken = async (
       return;
     }
 
-    const newAccessToken = generateAuthToken(user._id.toString());
-    const newRefreshToken = generateRefreshToken(user._id.toString());
+    const newAccessToken = generateAuthToken((user._id as any).toString());
+    const newRefreshToken = generateRefreshToken((user._id as any).toString());
 
     res.json({
       success: true,
@@ -254,7 +252,7 @@ export const forgotPassword = async (
 
     // Generate reset token
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    crypto.createHash('sha256').update(resetToken).digest('hex');
     
     // Store hashed token and expiry in database (you'd need to add these fields to User model)
     // For now, we'll just log it
@@ -283,7 +281,7 @@ export const resetPassword = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { token, password } = req.body;
+    const { token: _token, password: _password } = req.body;
 
     // In production, you would:
     // 1. Hash the token
